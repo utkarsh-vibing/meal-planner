@@ -1,0 +1,9 @@
+[project]
+name = "mealmind-api"
+version = "0.3.0"
+description = "MealMind working backend prototype"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
