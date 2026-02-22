@@ -1,37 +1,34 @@
-# MealMind API (working local prototype)
+# MealMind API scaffold
 
-This repository now contains a **runnable backend API prototype** with no external framework dependency.
+Initial backend scaffold for the MealMind MVP described in the PRD.
 
-## What is implemented
-- User creation
-- Meal creation/listing with normalized ingredient names
-- Weekly meal plan generation (idempotent per user+week)
-- Meal slot updates
-- Grocery list aggregation from the latest generated plan
-- HTTP tests covering health and end-to-end flow
+## Included
 
-## What is not complete yet
-- Mobile app UI
-- Authentication/authorization
-- AI planning/deduplication/voice agent
-- Advanced grocery scopes (`tomorrow` vs `this_week` vs `next_week` logic differences)
-- Migrations and production-grade deployment setup
+- FastAPI app with versioned API routes (`/api/v1`)
+- SQLModel-backed data models for core PRD entities
+- Starter endpoints for meals, meal plans, slot updates, and grocery list generation
+- Basic deterministic meal-plan generator service and grocery summarizer
+- Healthcheck test
 
-## Run
+## Run locally
+
 ```bash
-python -m app.main
-```
-Server starts at: `http://127.0.0.1:8000`
-
-## Test
-```bash
-python -m unittest -q
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+uvicorn app.main:app --reload
 ```
 
-## Example API calls
+## Run tests
+
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/users -H 'content-type: application/json' -d '{"name":"Asha"}'
-curl -X POST http://127.0.0.1:8000/api/v1/meals -H 'content-type: application/json' -d '{"user_id":1,"name":"Paneer Bowl","ingredients":[{"ingredient_name":"paneer","quantity":2,"unit":"cup"}]}'
-curl -X POST http://127.0.0.1:8000/api/v1/meal-plan/generate -H 'content-type: application/json' -d '{"user_id":1,"week_start_date":"2026-02-16"}'
-curl -X POST http://127.0.0.1:8000/api/v1/grocery-list -H 'content-type: application/json' -d '{"user_id":1,"scope":"this_week"}'
+pytest
 ```
+
+## Next steps
+
+1. Add proper migrations (Alembic) and switch default local DB to Postgres.
+2. Add auth + user scoping from token instead of `user_id` query/body fields.
+3. Replace deterministic planner with AI constraint-aware generation.
+4. Add ingredient alias model and semantic dedupe workflow.
+5. Expand grocery list logic by scope (tomorrow/this_week/next_week).

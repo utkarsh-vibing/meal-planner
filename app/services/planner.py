@@ -1,34 +1,29 @@
-from app.db import get_conn
-from app.models import MealTime
+from datetime import date
+
+from sqlmodel import Session, select
+
+from app.models import Meal, MealPlan, MealPlanSlot, MealTime
 
 
-MEAL_TIMES = [MealTime.breakfast.value, MealTime.lunch.value, MealTime.dinner.value, MealTime.snack.value]
+def generate_week_plan(session: Session, user_id: int, week_start_date: date) -> MealPlan:
+    meals = session.exec(select(Meal).where(Meal.user_id == user_id)).all()
+    plan = MealPlan(user_id=user_id, week_start_date=week_start_date)
+    session.add(plan)
+    session.flush()
 
+    meal_times = [MealTime.breakfast, MealTime.lunch, MealTime.dinner, MealTime.snack]
+    meal_ids = [meal.id for meal in meals if meal.id is not None]
+    for day in range(7):
+        for idx, meal_time in enumerate(meal_times):
+            meal_id = meal_ids[(day + idx) % len(meal_ids)] if meal_ids else None
+            slot = MealPlanSlot(
+                meal_plan_id=plan.id,
+                day=day,
+                meal_time=meal_time,
+                meal_id=meal_id,
+            )
+            session.add(slot)
 
-def generate_week_plan(user_id: int, week_start_date: str) -> dict:
-    with get_conn() as conn:
-        existing = conn.execute(
-            "SELECT id, user_id, week_start_date FROM meal_plans WHERE user_id = ? AND week_start_date = ?",
-            (user_id, week_start_date),
-        ).fetchone()
-        if existing:
-            return dict(existing)
-
-        cur = conn.execute(
-            "INSERT INTO meal_plans (user_id, week_start_date) VALUES (?, ?)",
-            (user_id, week_start_date),
-        )
-        plan_id = cur.lastrowid
-
-        meals = conn.execute("SELECT id FROM meals WHERE user_id = ? ORDER BY id", (user_id,)).fetchall()
-        meal_ids = [row["id"] for row in meals]
-
-        for day in range(7):
-            for idx, meal_time in enumerate(MEAL_TIMES):
-                meal_id = meal_ids[(day + idx) % len(meal_ids)] if meal_ids else None
-                conn.execute(
-                    "INSERT INTO meal_plan_slots (meal_plan_id, day, meal_time, meal_id) VALUES (?, ?, ?, ?)",
-                    (plan_id, day, meal_time, meal_id),
-                )
-
-        return {"id": plan_id, "user_id": user_id, "week_start_date": week_start_date}
+    session.commit()
+    session.refresh(plan)
+    return plan

@@ -1,19 +1,18 @@
-from dataclasses import dataclass
-import os
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass(frozen=True)
-class Settings:
+class Settings(BaseSettings):
     app_name: str = "MealMind API"
     app_env: str = "dev"
-    database_path: str = "mealmind.db"
+    database_url: str = Field(default="sqlite:///./mealmind.db")
     api_prefix: str = "/api/v1"
 
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="MEALMIND_")
 
+
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    return Settings(
-        app_name=os.getenv("MEALMIND_APP_NAME", "MealMind API"),
-        app_env=os.getenv("MEALMIND_APP_ENV", "dev"),
-        database_path=os.getenv("MEALMIND_DATABASE_PATH", "mealmind.db"),
-        api_prefix=os.getenv("MEALMIND_API_PREFIX", "/api/v1"),
-    )
+    return Settings()

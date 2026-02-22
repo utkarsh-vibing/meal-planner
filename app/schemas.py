@@ -2,27 +2,13 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from app.models import GroceryScope, IngredientCategory, MealTime
-
-
-class UserCreate(BaseModel):
-    name: str
-    dietary_preferences: str | None = None
-    metric_preference: bool = True
-
-
-class UserRead(BaseModel):
-    id: int
-    name: str
-    dietary_preferences: str | None = None
-    metric_preference: bool
+from app.models import GroceryScope, MealTime
 
 
 class MealIngredientIn(BaseModel):
     ingredient_name: str
     quantity: float = 1.0
     unit: str = "unit"
-    category: IngredientCategory = IngredientCategory.pantry
 
 
 class MealCreate(BaseModel):
@@ -56,16 +42,3 @@ class SlotUpdateRequest(BaseModel):
 class GroceryRequest(BaseModel):
     user_id: int
     scope: GroceryScope
-
-
-class GroceryItemRead(BaseModel):
-    ingredient_name: str
-    quantity: float
-    unit: str
-    category: IngredientCategory
-
-
-class GroceryListRead(BaseModel):
-    list_id: int
-    scope: GroceryScope
-    items: list[GroceryItemRead]
